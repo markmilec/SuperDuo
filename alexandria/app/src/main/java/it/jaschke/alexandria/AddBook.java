@@ -10,6 +10,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +21,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.vision.barcode.Barcode;
+
+import it.jaschke.alexandria.barcode.BarcodeCaptureActivity;
 import it.jaschke.alexandria.data.AlexandriaContract;
 import it.jaschke.alexandria.services.BookService;
 import it.jaschke.alexandria.services.DownloadImage;
@@ -33,11 +38,10 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
     private final String EAN_CONTENT="eanContent";
     private static final String SCAN_FORMAT = "scanFormat";
     private static final String SCAN_CONTENTS = "scanContents";
+    private static final int RC_BARCODE_CAPTURE = 9001;
 
     private String mScanFormat = "Format:";
     private String mScanContents = "Contents:";
-
-
 
     public AddBook(){
     }
@@ -79,29 +83,18 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
                     return;
                 }
                 //Once we have an ISBN, start a book intent
-                Intent bookIntent = new Intent(getActivity(), BookService.class);
-                bookIntent.putExtra(BookService.EAN, ean);
-                bookIntent.setAction(BookService.FETCH_BOOK);
-                getActivity().startService(bookIntent);
-                AddBook.this.restartLoader();
+                fetchBook(ean);
             }
         });
 
         rootView.findViewById(R.id.scan_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // This is the callback method that the system will invoke when your button is
-                // clicked. You might do this by launching another app or by including the
-                //functionality directly in this app.
-                // Hint: Use a Try/Catch block the Intent dispatch gracefully, if you
-                // are using an external app.
-                //when you're done, remove the toast below.to handle
-                Context context = getActivity();
-                CharSequence text = "This button should let you scan a book for its barcode!";
-                int duration = Toast.LENGTH_SHORT;
+                Intent intent = new Intent(getActivity(), BarcodeCaptureActivity.class);
+                intent.putExtra(BarcodeCaptureActivity.AutoFocus, true);
+                intent.putExtra(BarcodeCaptureActivity.UseFlash, false);
 
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
+                startActivityForResult(intent, RC_BARCODE_CAPTURE);
             }
         });
 
@@ -129,6 +122,36 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
         }
 
         return rootView;
+    }
+
+    private void fetchBook(String ean) {
+        Intent bookIntent = new Intent(getActivity(), BookService.class);
+        bookIntent.putExtra(BookService.EAN, ean);
+        bookIntent.setAction(BookService.FETCH_BOOK);
+        getActivity().startService(bookIntent);
+        AddBook.this.restartLoader();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == RC_BARCODE_CAPTURE) {
+            if (resultCode == CommonStatusCodes.SUCCESS) {
+                if (data != null) {
+                    Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
+                    ean.setText(barcode.displayValue);
+                    Log.d(TAG, "Barcode read: " + barcode.displayValue);
+                } else {
+                    Toast.makeText(getActivity(), R.string.barcode_failure, Toast.LENGTH_SHORT);
+                    Log.d(TAG, "No barcode captured, intent data is null");
+                }
+            } else {
+                Toast.makeText(getActivity(), String.format(getString(R.string.barcode_error),
+                        CommonStatusCodes.getStatusCodeString(resultCode)), Toast.LENGTH_SHORT);
+            }
+        }
+        else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void restartLoader(){
