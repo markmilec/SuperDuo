@@ -92,10 +92,9 @@ public class BookService extends IntentService {
         }
 
         if (!Utility.isNetworkAvailable(this)) {
-            CharSequence text = "Network connection is unavailable. Unable to fetch book.";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(getApplicationContext(), text, duration);
-            toast.show();
+            Intent messageIntent = new Intent(MainActivity.MESSAGE_EVENT);
+            messageIntent.putExtra(MainActivity.MESSAGE_KEY, getResources().getString(R.string.no_network));
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(messageIntent);
             return;
         }
 
