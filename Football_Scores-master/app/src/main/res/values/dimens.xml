@@ -15,4 +15,9 @@
     <dimen name="pager_tab_padding">4dp</dimen>
     <dimen name="elevation">4dp</dimen>
     <dimen name="padding_top">5dp</dimen>
+
+    <dimen name="widget_margin">8dp</dimen>
+    <dimen name="widget_width">40dp</dimen>
+    <dimen name="widget_height">180dp</dimen>
+
 </resources>

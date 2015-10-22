@@ -38,7 +38,7 @@ public class Utilities {
         if (league_num == CHAMPIONS_LEAGUE) {
             if (match_day <= 6) {
                 return context.getString(R.string.group_stage_text) + ", "
-                        + context.getString(R.string.matchday_text) + "6" ;
+                        + context.getString(R.string.matchday_text) + ": 6" ;
             } else if (match_day == 7 || match_day == 8) {
                 return context.getString(R.string.first_knockout_round_text);
             } else if (match_day == 9 || match_day == 10) {
@@ -49,7 +49,7 @@ public class Utilities {
                 return context.getString(R.string.final_text);
             }
         } else {
-            return context.getString(R.string.matchday_text) + String.valueOf(match_day);
+            return context.getString(R.string.matchday_text) + ": " + String.valueOf(match_day);
         }
     }
 

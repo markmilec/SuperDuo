@@ -29,11 +29,11 @@ import barqsoft.footballscores.Utilities;
 /**
  * Created by yehya khaled on 3/2/2015.
  */
-public class myFetchService extends IntentService {
-    public static final String LOG_TAG = "myFetchService";
+public class FetchService extends IntentService {
+    public static final String LOG_TAG = "FetchService";
 
-    public myFetchService() {
-        super("myFetchService");
+    public FetchService() {
+        super("FetchService");
     }
 
     @Override
@@ -165,10 +165,10 @@ public class myFetchService extends IntentService {
                 // If you are finding no data in the app, check that this contains all the leagues.
                 // If it doesn't, that can cause an empty DB, bypassing the dummy data routine.
                 if (League.equals(String.valueOf(Utilities.PREMIER_LEAGUE)) ||
-                    League.equals(String.valueOf(Utilities.SERIE_A)) ||
-                    League.equals(String.valueOf(Utilities.BUNDESLIGA)) ||
-                    League.equals(String.valueOf(Utilities.CHAMPIONS_LEAGUE)) ||
-                    League.equals(String.valueOf(Utilities.PRIMERA_DIVISION))) {
+                        League.equals(String.valueOf(Utilities.SERIE_A)) ||
+                        League.equals(String.valueOf(Utilities.BUNDESLIGA)) ||
+                        League.equals(String.valueOf(Utilities.CHAMPIONS_LEAGUE)) ||
+                        League.equals(String.valueOf(Utilities.PRIMERA_DIVISION))) {
 
                     match_id = match_data.getJSONObject(LINKS).getJSONObject(SELF).getString("href");
                     match_id = match_id.replace(MATCH_LINK, "");
@@ -235,12 +235,19 @@ public class myFetchService extends IntentService {
             ContentValues[] insert_data = new ContentValues[values.size()];
             values.toArray(insert_data);
             inserted_data = mContext.getContentResolver().bulkInsert(DatabaseContract.BASE_CONTENT_URI, insert_data);
-
             //Log.v(LOG_TAG,"Succesfully Inserted : " + String.valueOf(inserted_data));
+
+            updateWidgets();
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage());
         }
+    }
 
+    private void updateWidgets() {
+        // Setting the package ensures that only components in our app will receive the broadcast
+        Intent dataUpdatedIntent = new Intent(getString(R.string.data_update_key))
+                .setPackage(getPackageName());
+        sendBroadcast(dataUpdatedIntent);
     }
 }
 
